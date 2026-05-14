@@ -1,6 +1,8 @@
 // ==========================================
 // 1. SECCIÓN DE IMPORTACIONES
 // ==========================================
+import SubirProgreso from './SubirProgreso';
+import Comunidad from './Comunidad';
 // useState: Para manejar datos que cambian (como si el menú está abierto).
 // useEffect: Para ejecutar efectos secundarios (como el temporizador del slider).
 import { useState, useEffect } from 'react'
@@ -22,7 +24,8 @@ import fotoBoomRoom from './assets/boom-room.png';
 import fotoMancuernas from './assets/mancuernas.png';
 import fotoMuñeco from './assets/muñeco.png';
 
-function App() {
+function App() 
+{
   // --- ESTADOS (Variables dinámicas de React) ---
   
   // Maneja si el menú lateral está visible (true) o no (false).
@@ -95,10 +98,10 @@ function App() {
             <button className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <CreditCard size={20} className="text-sl-gray group-hover:text-sl-navy" /> PLANES
             </button>
-            
-            <button className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
+
+            <Link to="/comunidad" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <Users size={20} className="text-sl-gray group-hover:text-sl-navy" /> COMUNIDAD
-            </button>
+            </Link>
           </div>
 
           {/* Marca de agua al fondo del sidebar */}
@@ -156,7 +159,7 @@ function App() {
                   <div className="group flex flex-col items-center text-center w-64 p-6 rounded-2xl border border-transparent hover:border-sl-navy transition-all duration-300 bg-sl-navy/5">
                     <div className="bg-sl-navy p-4 rounded-full mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-sl-navy/20"><Dumbbell size={32} className="text-sl-white" /></div>
                     <h3 className="text-lg font-bold mb-3 uppercase italic">FUERZA PURA</h3>
-                    <p className="text-sm text-sl-gray leading-relaxed">Equipamiento de alto rendimiento para powerlifting y culturismo.</p>
+                    <p className="text-sm text-sl-gray leading-relaxed">Equipamiento de alto rendimiento para tu salud y culturismo.</p>
                   </div>
                   {/* Tarjeta de Nutrición */}
                   <div className="group flex flex-col items-center text-center w-64 p-6 rounded-2xl border border-transparent hover:border-sl-navy transition-all duration-300 bg-sl-navy/5">
@@ -209,12 +212,14 @@ function App() {
           
           {/* RUTA "/instalaciones": Muestra el componente de la galería de fotos */}
           <Route path="/instalaciones" element={<Instalaciones />} />
+          <Route path="/comunidad" element={<Comunidad />} />
+          <Route path="/comunidad/subir" element={<SubirProgreso />} />
         </Routes>
 
         {/* --- PIE DE PÁGINA (Footer) --- */}
         <footer className="mt-auto py-12 border-t border-sl-gray/10">
           <p className="text-[11px] text-sl-gray uppercase tracking-[0.5em] opacity-50 text-center font-light">
-            Strength Lab El Salvador| Trabajamos para ti.| Desarrolado por: Adam Andres Guillen Bonilla
+            Strength Lab El Salvador| Trabajamos para ti.| Desarrollado por: Adam Andres Guillen Bonilla
           </p>
         </footer>
       </div>
