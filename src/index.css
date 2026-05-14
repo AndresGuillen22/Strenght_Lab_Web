@@ -1,0 +1,17 @@
+/* 1. Importamos Tailwind v4 directamente */
+@import "tailwindcss";
+
+/* 2. Definimos tus colores de Strength Lab como variables de tema */
+@theme {
+  --color-sl-navy: #102940;
+  --color-sl-petrol: #1A3140;
+  --color-sl-white: #F2F2F2;
+  --color-sl-gray: #A6A6A6;
+  --color-sl-black: #0D0D0D;
+}
+
+/* 3. Forzamos el fondo negro al cuerpo de la página */
+body {
+  background-color: var(--color-sl-black);
+  color: var(--color-sl-white);
+}
