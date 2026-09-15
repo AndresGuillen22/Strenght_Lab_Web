@@ -1,23 +1,57 @@
-// ==========================================
+// ==========================================================
+// App.jsx — COMPONENTE PRINCIPAL DEL SITIO
+// ==========================================================
+// Este archivo arma TODO el sitio: el menú lateral, el enrutamiento
+// (qué página se muestra según la URL) y el contenido de la página de
+// Inicio. Las demás páginas (Instalaciones, Comunidad, SubirProgreso,
+// AgendaPrueba) viven en sus propios archivos y aquí solo se "conectan".
+//
+// GUÍA RÁPIDA PARA LEER LAS CLASES DE TAILWIND (el sistema de estilos
+// que usamos en todo el proyecto en vez de escribir CSS a mano):
+//   - Cada palabra dentro de className="..." es una "utilidad" que hace
+//     una sola cosa (ej: "flex" = display flex, "text-xl" = tamaño de
+//     texto grande, "p-6" = padding, "rounded-full" = bordes redondos).
+//   - Los colores que empiezan con "sl-" (sl-navy, sl-black, sl-white,
+//     sl-gray, sl-petrol) son los colores de marca definidos en index.css.
+//   - Un prefijo como "sm:", "md:" o "lg:" antes de una clase significa
+//     "aplica esta clase solo a partir de este tamaño de pantalla". Así
+//     el sitio se ve bien tanto en celular como en computadora.
+//   - Palabras como "hover:" o "group-hover:" aplican la clase solo
+//     cuando el mouse pasa por encima de ese elemento (o de su "grupo").
+
+// ==========================================================
 // 1. SECCIÓN DE IMPORTACIONES
-// ==========================================
+// ==========================================================
+// Estos son los componentes de las otras páginas del sitio. Los
+// importamos aquí para poder usarlos más abajo en las <Route>.
+// (Comunidad y SubirProgreso siguen importados aunque su ruta esté
+// oculta por ahora — ver la nota en "SECCIÓN COMUNIDAD" más abajo).
 import SubirProgreso from './SubirProgreso';
 import Comunidad from './Comunidad';
 import AgendaPrueba from './AgendaPrueba';
-// useState: Para manejar datos que cambian (como si el menú está abierto).
-// useEffect: Para ejecutar efectos secundarios (como el temporizador del slider).
+
+// useState: para manejar datos que cambian con el tiempo (por ejemplo,
+//           si el menú lateral está abierto, o qué foto se ve ahora).
+// useEffect: para ejecutar código "secundario" cuando el componente
+//            aparece en pantalla (por ejemplo, arrancar un temporizador).
 import { useState, useEffect } from 'react'
 
-// Importación de Iconos desde la librería 'lucide-react'
+// Importación de Iconos desde la librería 'lucide-react'.
+// Cada uno de estos nombres es un componente de ícono listo para usar,
+// por ejemplo <Menu size={28} /> dibuja el ícono de menú hamburguesa.
 import { Dumbbell, Menu, X, Info, Map, CreditCard, Users, CalendarCheck } from 'lucide-react';
 
-// Importación de componentes de Navegación:
-// BrowserRouter: El motor que permite tener múltiples rutas.
-// Routes/Route: Definen qué "página" mostrar según la URL.
-// Link: El sustituto de <a> que cambia de página sin recargar el navegador.
+// Importación de componentes de Navegación de React Router:
+// BrowserRouter: el "motor" que le permite a la página tener varias
+//                rutas/URLs distintas sin ser varias páginas HTML reales.
+// Routes/Route:  definen qué componente mostrar según la URL actual.
+// Link:          el sustituto de <a href="..."> que cambia de página
+//                sin recargar el navegador (más rápido y fluido).
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
-// Importación de Archivos Locales (Imágenes y Componentes)
+// Importación de Archivos Locales (Imágenes y Componentes).
+// Al importar una imagen así, Vite la convierte en una URL que se
+// puede usar directamente como fondo o como src de un <img>.
 import bgGym from './assets/bg-gym.jpg';
 import Instalaciones from './Instalaciones';
 import fotoBarras from './assets/barras.png';
@@ -25,10 +59,25 @@ import fotoBoomRoom from './assets/boom-room.png';
 import fotoMancuernas from './assets/mancuernas.png';
 import fotoMuñeco from './assets/muñeco.png';
 
-// Datos de los planes de entrenamiento (Plan Élite, Progreso, Inicial y Básico)
+// Fotos usadas en las tarjetas de la sección "Nuestros Planes"
+import fotoPlanElite from './assets/plan-elite.jpg';
+import fotoPlanProgreso from './assets/plan-progreso.jpg';
+import fotoPlanInicial from './assets/plan-inicial.jpg';
+import fotoPlanBasico from './assets/plan-basico.jpg';
+
+// ==========================================================
+// 2. DATOS DE LOS PLANES
+// ==========================================================
+// Este arreglo (array) vive FUERA del componente App porque son datos
+// fijos que no cambian mientras la página está abierta (no necesitan
+// useState). Cada objeto representa una tarjeta de precio, y más abajo
+// usamos .map() para dibujar una tarjeta por cada plan automáticamente
+// (así, si en el futuro agregas o quitas un plan, solo tocas esta lista
+// y NO tienes que tocar el HTML/JSX de las tarjetas).
 const planes = [
   {
     nombre: 'Plan Élite',
+    foto: fotoPlanElite,
     sesiones: '20 sesiones',
     precio: '$200',
     descripcion: 'El compromiso total con tu transformación. 20 sesiones de entrenamiento 100% personalizado: más tiempo junto a tu entrenador, ajustes constantes en tu rutina y el ritmo de avance más rápido de los tres planes.',
@@ -37,10 +86,11 @@ const planes = [
       'Seguimiento y ajustes de rutina más frecuentes',
       'Resultados más rápidos y sostenidos en el tiempo',
     ],
-    destacado: false,
+    destacado: false, // true = se muestra resaltado con la etiqueta "Más Popular"
   },
   {
     nombre: 'Plan Progreso',
+    foto: fotoPlanProgreso,
     sesiones: '15 sesiones',
     precio: '$150',
     descripcion: 'El equilibrio perfecto entre inversión y resultados: las sesiones suficientes para transformar tu cuerpo de verdad y construir un hábito de entrenamiento sólido.',
@@ -53,6 +103,7 @@ const planes = [
   },
   {
     nombre: 'Plan Inicial',
+    foto: fotoPlanInicial,
     sesiones: '10 sesiones',
     precio: '$100',
     descripcion: 'La puerta de entrada al entrenamiento personalizado. Ideal para probar el método Strength Lab con acompañamiento real, aprender la técnica correcta desde el primer día y empezar a notar cambios en tu cuerpo.',
@@ -65,7 +116,8 @@ const planes = [
   },
   {
     nombre: 'Plan Básico',
-    sesiones: null,
+    foto: fotoPlanBasico,
+    sesiones: null, // null = este plan no tiene un número de sesiones que mostrar
     precio: '$45',
     descripcion: 'Para quienes prefieren entrenar por su cuenta con una base sólida. No incluye entrenador personal, pero sí rutinas diseñadas según tus objetivos y el apoyo básico de nuestro equipo dentro del gimnasio.',
     beneficios: [
@@ -77,10 +129,13 @@ const planes = [
   },
 ];
 
+// ==========================================================
+// 3. COMPONENTE PRINCIPAL
+// ==========================================================
 function App()
 {
   // --- ESTADOS (Variables dinámicas de React) ---
-  
+
   // Maneja si el menú lateral está visible (true) o no (false).
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -88,31 +143,45 @@ function App()
   const [currentImage, setCurrentImage] = useState(0);
 
   // Array que contiene todas las imágenes que se deslizarán en el fondo del inicio.
+  // No necesita ser un estado (useState) porque su contenido nunca cambia,
+  // solo cambia CUÁL de sus posiciones se muestra (eso sí es "currentImage").
   const sliderImages = [bgGym, fotoBarras, fotoBoomRoom, fotoMancuernas, fotoMuñeco];
 
   // --- LÓGICA DEL SLIDER (Efecto de tiempo) ---
+  // useEffect ejecuta el código de adentro después de que el componente
+  // se dibuja en pantalla. El arreglo [sliderImages.length] al final le
+  // dice a React "solo vuelve a ejecutar este efecto si ese valor cambia"
+  // (en la práctica, casi nunca cambia, así que el temporizador se arma
+  // una sola vez cuando se abre la página).
   useEffect(() => {
     // Definimos un intervalo que se ejecuta cada 5000 milisegundos (5 segundos).
     const interval = setInterval(() => {
-      setCurrentImage((prev) => 
+      setCurrentImage((prev) =>
         // Lógica circular: Si llegamos a la última foto, regresamos a la 0. Si no, sumamos 1.
         prev === sliderImages.length - 1 ? 0 : prev + 1
       );
     }, 5000);
 
-    // Función de limpieza: Si el componente se destruye, borramos el reloj para evitar fugas de memoria.
+    // Función de limpieza: Si el componente se destruye, borramos el
+    // temporizador para evitar fugas de memoria (que siga corriendo en
+    // segundo plano sin que nadie lo use).
     return () => clearInterval(interval);
   }, [sliderImages.length]); // Este efecto solo se reinicia si la cantidad de fotos cambia.
 
   return (
+    // <BrowserRouter> debe envolver TODO lo que use <Routes>, <Route> o
+    // <Link>, porque es el que sabe leer y cambiar la URL del navegador.
     <BrowserRouter>
       {/* Contenedor principal con fondo negro, texto blanco y fuente sans-serif */}
       <div className="min-h-screen bg-sl-black text-sl-white font-sans flex flex-col overflow-x-hidden">
-        
+
         {/* --- 1. BOTÓN DE MENÚ HAMBURGUESA --- */}
-        {/* Solo se muestra si el menú lateral está cerrado (!isMenuOpen) */}
+        {/* "{!isMenuOpen && (...)}" es "renderizado condicional": ese botón
+            SOLO se dibuja en pantalla si isMenuOpen es false (si es true,
+            React no muestra nada en su lugar). Así evitamos tener el botón
+            de abrir encima del menú ya abierto. */}
         {!isMenuOpen && (
-          <button 
+          <button
             onClick={() => setIsMenuOpen(true)} // Al dar clic, el estado pasa a true y el menú aparece.
             className="fixed top-6 left-6 z-50 p-3 bg-sl-navy hover:bg-sl-petrol rounded-full shadow-lg transition-all duration-300 transform hover:scale-110"
           >
@@ -121,7 +190,13 @@ function App()
         )}
 
         {/* --- 2. PANEL LATERAL (Sidebar) --- */}
-        {/* Usamos clases dinámicas: translate-x-0 (se ve) o -translate-x-full (está escondido a la izquierda) */}
+        {/* Este div SIEMPRE existe en la página, pero usamos una plantilla
+            de texto (backticks `` `` ``) para elegir sus clases según el
+            estado: si isMenuOpen es true, le ponemos "translate-x-0" (se
+            ve, en su posición normal); si es false, le ponemos
+            "-translate-x-full" (se mueve fuera de la pantalla hacia la
+            izquierda, quedando "escondido"). La animación suave la da
+            "transition-transform duration-500". */}
         <div className={`fixed top-0 left-0 h-full w-72 max-w-[85vw] bg-sl-black border-r border-sl-navy z-[60] transition-transform duration-500 ease-in-out transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex justify-end p-6">
             {/* Botón X para cerrar el menú lateral */}
@@ -129,32 +204,49 @@ function App()
               <X size={32} />
             </button>
           </div>
-          
+
           {/* Lista de enlaces de navegación interna */}
           <div className="flex flex-col gap-8 px-8 mt-6">
             <h2 className="text-sl-gray uppercase text-[10px] tracking-[0.4em] font-bold mb-2">Navegación</h2>
-            
-            {/* Link a Inicio: Cambia la ruta a "/" y cierra el menú lateral */}
+
+            {/* Link a Inicio: Cambia la ruta a "/" y cierra el menú lateral.
+                El onClick además de navegar, llama a setIsMenuOpen(false)
+                para que el menú se cierre solo al elegir una opción. */}
             <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <Dumbbell size={20} className="text-sl-gray group-hover:text-sl-navy" /> INICIO
             </Link>
-            
+
+            {/* Este botón todavía no tiene una página/función asignada
+                (es un "placeholder" visual para cuando se agregue esa sección). */}
             <button className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <Info size={20} className="text-sl-gray group-hover:text-sl-navy" /> INFORMACIÓN
             </button>
-            
-            {/* Link a Instalaciones: Te manda a la nueva página que creamos */}
+
+            {/* Link a Instalaciones: Te manda a la página de la galería de fotos */}
             <Link to="/instalaciones" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <Map size={20} className="text-sl-gray group-hover:text-sl-navy" /> INSTALACIONES
             </Link>
-            
+
+            {/* Placeholder visual, igual que "INFORMACIÓN" (sin función todavía) */}
             <button className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <CreditCard size={20} className="text-sl-gray group-hover:text-sl-navy" /> PLANES
             </button>
 
+            {/* ============================================================
+                SECCIÓN COMUNIDAD (temporalmente oculta)
+                ============================================================
+                Este enlace del menú, junto con las rutas "/comunidad" y
+                "/comunidad/subir" más abajo, está comentado a propósito
+                para que la sección de Comunidad NO aparezca en el sitio
+                por ahora. El código de Comunidad.jsx y SubirProgreso.jsx
+                NO se borró: sigue completo y funcionando. Para volver a
+                activarla en el futuro, solo hay que quitar los "{/*" y
+                "*}/" de aquí y de las <Route> correspondientes más abajo.
+
             <Link to="/comunidad" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <Users size={20} className="text-sl-gray group-hover:text-sl-navy" /> COMUNIDAD
             </Link>
+            */}
 
             <Link to="/agendar" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
               <CalendarCheck size={20} className="text-sl-gray group-hover:text-sl-navy" /> DÍA GRATIS
@@ -168,32 +260,46 @@ function App()
         </div>
 
         {/* --- CAPA OSCURA (OVERLAY) --- */}
-        {/* Aparece detrás del menú para oscurecer la web y cerrarlo si das clic fuera */}
+        {/* Aparece detrás del menú para oscurecer el resto de la página y
+            se puede cerrar el menú si das clic en cualquier parte oscura. */}
         {isMenuOpen && (
           <div onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/80 z-[55] transition-opacity duration-300" />
         )}
 
         {/* --- ENRUTAMIENTO --- */}
+        {/* <Routes> revisa la URL actual del navegador y dibuja SOLO la
+            <Route> cuyo "path" coincide. Por ejemplo, si la URL es
+            "/instalaciones", React muestra <Instalaciones /> y nada más. */}
         <Routes>
-          {/* RUTA "/" (Contenido de la página de Inicio) */}
+          {/* RUTA "/" (Contenido de la página de Inicio).
+              Como esta página tiene varias secciones, en vez de crear un
+              componente aparte, escribimos el contenido directo aquí
+              dentro de un fragmento <>...</> (una "caja invisible" que
+              agrupa varios elementos sin agregar una etiqueta extra al HTML). */}
           <Route path="/" element={
             <>
               {/* SECCIÓN HERO CON IMÁGENES DESLIZANTES */}
               <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-                
-                {/* Generación dinámica de las capas de fondo */}
+
+                {/* Generación dinámica de las capas de fondo.
+                    .map() recorre "sliderImages" y crea un <div> de fondo
+                    por cada foto. Todas están apiladas una encima de otra
+                    (position: absolute); solo la que coincide con
+                    "currentImage" tiene "opacity-40" (se ve), las demás
+                    tienen "opacity-0" (invisibles). Como todas tienen una
+                    animación de transición, esto crea el efecto de
+                    "disolverse" de una foto a otra cada 5 segundos. */}
                 {sliderImages.map((img, index) => (
-                  <div 
+                  <div
                     key={index}
-                    // La imagen activa tiene 'opacity-40', las demás 'opacity-0'
                     className={`absolute inset-0 bg-cover bg-center bg-no-repeat blur-[8px] grayscale scale-110 transition-opacity duration-1000 ease-in-out ${index === currentImage ? 'opacity-40' : 'opacity-0'}`}
                     style={{ backgroundImage: `url(${img})` }}
                   />
                 ))}
-                
+
                 {/* Gradiente oscuro superior/inferior para mejorar lectura de texto */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sl-black/40 to-sl-black" />
-                
+
                 {/* Contenido Central del Hero */}
                 <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 mt-10">
                   <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black mb-4 tracking-tighter uppercase italic leading-tight">
@@ -202,6 +308,8 @@ function App()
                   <p className="text-[10px] sm:text-sm md:text-xl text-sl-gray font-light tracking-[0.2em] md:tracking-[0.4em] uppercase mb-8">
                     Evoluciona tu fuerza • Since 2018
                   </p>
+                  {/* Botón principal de llamado a la acción (CTA): lleva a
+                      la página "/agendar" para reservar el día de prueba gratis. */}
                   <Link
                     to="/agendar"
                     className="bg-sl-navy hover:bg-sl-petrol text-sl-white font-bold py-4 px-6 sm:px-10 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-sl-navy/50 uppercase tracking-widest text-xs sm:text-sm text-center"
@@ -220,36 +328,82 @@ function App()
                   <p className="text-sl-gray italic text-xs sm:text-sm mt-3 tracking-[0.3em] uppercase">Lock in your strongest era</p>
                 </div>
 
+                {/* "grid-cols-1 md:grid-cols-2 xl:grid-cols-4" = las tarjetas
+                    se acomodan en 1 columna en celular, 2 en tablet/pantallas
+                    medianas, y 4 en pantallas muy anchas. */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8">
+                  {/* Recorremos el arreglo "planes" (definido arriba, fuera
+                      del componente) y dibujamos una tarjeta por cada plan. */}
                   {planes.map((plan) => (
                     <div
                       key={plan.nombre}
-                      className={`relative flex flex-col rounded-3xl p-6 sm:p-8 border transition-all duration-300 hover:-translate-y-1 ${
+                      // Si "plan.destacado" es true, usamos un estilo con
+                      // borde y fondo más resaltado (para el plan más popular).
+                      // "overflow-hidden" recorta la foto de arriba para que
+                      // sus esquinas sigan la misma curva que "rounded-3xl".
+                      className={`relative flex flex-col rounded-3xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
                         plan.destacado
                           ? 'bg-sl-navy/20 border-sl-navy shadow-xl shadow-sl-navy/20'
                           : 'bg-sl-navy/5 border-sl-gray/10 hover:border-sl-navy/50'
                       }`}
                     >
+                      {/* Esta etiqueta "Más Popular" solo se dibuja si
+                          plan.destacado es true (renderizado condicional con &&). */}
                       {plan.destacado && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sl-navy text-sl-white text-[10px] font-black uppercase tracking-widest py-1 px-4 rounded-full whitespace-nowrap shadow-lg">
+                        <span className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-sl-navy text-sl-white text-[10px] font-black uppercase tracking-widest py-1 px-4 rounded-full whitespace-nowrap shadow-lg">
                           Más Popular
                         </span>
                       )}
 
-                      <h3 className="text-xl font-black uppercase italic tracking-tight mb-1">{plan.nombre}</h3>
-                      <p className="text-sl-gray text-xs uppercase tracking-widest mb-4 h-4">{plan.sesiones}</p>
-                      <p className="text-4xl font-black text-sl-white mb-6">{plan.precio}</p>
+                      {/* FOTO DEL PLAN: usamos plan.foto (la imagen que
+                          importamos arriba y guardamos en cada objeto del
+                          arreglo "planes"). El degradado oscuro de abajo
+                          ayuda a que el borde de la foto se funda con la
+                          tarjeta en vez de cortarse de golpe.
+                          Usamos "aspect-square" (caja cuadrada, que crece o
+                          encoge junto con el ancho de la tarjeta) en vez de
+                          una altura fija: como las fotos originales son
+                          verticales, una caja cuadrada recorta mucho menos
+                          que una caja baja y ancha, así se ve casi toda la
+                          foto (y por lo tanto las caras) sin importar cuántas
+                          columnas tenga la grilla en cada tamaño de pantalla. */}
+                      <div className="relative aspect-square overflow-hidden">
+                        <img
+                          src={plan.foto}
+                          alt={plan.nombre}
+                          // Las fotos son verticales (retrato) pero la caja
+                          // donde se muestran es más ancha que alta, así que
+                          // "object-cover" recorta bastante arriba y abajo.
+                          // "object-top" hace que ese recorte se quede pegado
+                          // a la parte de ARRIBA de la foto (donde están las
+                          // caras) y solo recorte de abajo hacia arriba.
+                          className="w-full h-full object-cover object-top"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-sl-black/80 via-transparent to-transparent" />
+                      </div>
 
-                      <p className="text-sm text-sl-gray leading-relaxed mb-6 grow">{plan.descripcion}</p>
+                      {/* Contenido de texto de la tarjeta, con su propio
+                          padding (antes este padding estaba en la tarjeta
+                          completa; ahora vive aquí para que la foto de
+                          arriba pueda ocupar todo el ancho sin márgenes). */}
+                      <div className="flex flex-col grow p-6 sm:p-8">
+                        <h3 className="text-xl font-black uppercase italic tracking-tight mb-1">{plan.nombre}</h3>
+                        <p className="text-sl-gray text-xs uppercase tracking-widest mb-4 h-4">{plan.sesiones}</p>
+                        <p className="text-4xl font-black text-sl-white mb-6">{plan.precio}</p>
 
-                      <ul className="space-y-2 text-sm text-sl-gray">
-                        {plan.beneficios.map((beneficio) => (
-                          <li key={beneficio} className="flex items-start gap-2">
-                            <span className="text-sl-navy mt-1">•</span>
-                            <span>{beneficio}</span>
-                          </li>
-                        ))}
-                      </ul>
+                        <p className="text-sm text-sl-gray leading-relaxed mb-6 grow">{plan.descripcion}</p>
+
+                        {/* Lista de beneficios: otro .map(), esta vez sobre el
+                            arreglo "beneficios" que vive DENTRO de cada plan. */}
+                        <ul className="space-y-2 text-sm text-sl-gray">
+                          {plan.beneficios.map((beneficio) => (
+                            <li key={beneficio} className="flex items-start gap-2">
+                              <span className="text-sl-navy mt-1">•</span>
+                              <span>{beneficio}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -277,7 +431,8 @@ function App()
                         </div>
                       </div>
                     </div>
-                    {/* El Mapa embebido en un Iframe */}
+                    {/* El Mapa embebido en un Iframe (esto es un mapa real
+                        de Google Maps incrustado, no una imagen). */}
                     <div className="h-[450px] w-full rounded-3xl overflow-hidden border border-sl-gray/20 shadow-2xl relative group">
                       <iframe title="Ubicación Exacta Strength Lab" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d484.58403504688647!2d-89.26725676052907!3d13.67768075805992!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8f632ffdacd3596b%3A0x8121b73f1e83602b!2sStrength%20Lab%20Fitness%20Center!5e0!3m2!1ses-419!2ssv!4v1774470105603!5m2!1ses-419!2ssv" width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="opacity-80 group-hover:opacity-100 transition-opacity duration-700"></iframe>
                       {/* Efecto de sombra interna sobre el mapa */}
@@ -288,11 +443,21 @@ function App()
               </section>
             </>
           } />
-          
+
           {/* RUTA "/instalaciones": Muestra el componente de la galería de fotos */}
           <Route path="/instalaciones" element={<Instalaciones />} />
+
+          {/* RUTAS DE COMUNIDAD (temporalmente ocultas)
+              Igual que el enlace del menú de más arriba, estas dos rutas
+              están comentadas a propósito. Mientras estén así, aunque
+              alguien escriba "/comunidad" directo en la URL, no va a
+              encontrar nada (React Router no reconoce la ruta). Para
+              reactivarlas, descomenta estas dos líneas.
+
           <Route path="/comunidad" element={<Comunidad />} />
           <Route path="/comunidad/subir" element={<SubirProgreso />} />
+          */}
+
           <Route path="/agendar" element={<AgendaPrueba />} />
         </Routes>
 

@@ -1,69 +1,138 @@
-// ==========================================
-// IMPORTACIONES
-// ==========================================
+// ==========================================================
+// PÁGINA: AGENDA TU DÍA DE PRUEBA GRATIS
+// ==========================================================
+// Esta es la página más "avanzada" del sitio: tiene un formulario de
+// contacto, un calendario hecho a mano (sin librerías externas) y, al
+// confirmar, arma un mensaje de texto y abre WhatsApp con todo ya
+// escrito para que la persona solo tenga que darle "Enviar".
+//
+// No hay backend: todo pasa en el navegador de quien visita la página.
+// Por eso usamos WhatsApp como "buzón" en vez de guardar los datos en
+// una base de datos.
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Sunrise, Sunset, MessageCircle } from 'lucide-react';
 
-// Número de WhatsApp del gimnasio (formato internacional, sin '+' ni espacios)
+// Número de WhatsApp del gimnasio, en formato internacional y sin
+// espacios ni símbolo "+" (así lo pide el enlace de WhatsApp que usamos
+// más abajo: https://wa.me/<numero>).
 const WHATSAPP_NUMBER = '50375093445';
 
+// Estos tres arreglos son solo listas de texto en español que usamos
+// para "traducir" los números que nos da JavaScript (los días de la
+// semana van de 0 a 6, los meses de 0 a 11) a palabras legibles.
 const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DIAS_LARGOS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 export default function AgendaPrueba() {
-  // Fecha de hoy sin horas/minutos, para comparar días completos
+  // "hoy" representa el día de hoy, pero con la hora forzada a 00:00:00.
+  // Es un truco muy común en JavaScript: así podemos comparar fechas
+  // completas (día contra día) sin que la hora exacta arruine la comparación.
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
+  // --- ESTADOS ---
+  // (datos que, al cambiar con su función "set...", hacen que React
+  // vuelva a dibujar la pantalla con los valores nuevos)
+
+  // mesActual: el mes que se está mostrando en el calendario ahora mismo.
+  // Empieza siendo el día 1 del mes actual.
   const [mesActual, setMesActual] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+
+  // diaSeleccionado: la fecha exacta que la persona eligió en el
+  // calendario (o null si todavía no ha elegido ninguna).
   const [diaSeleccionado, setDiaSeleccionado] = useState(null);
+
+  // form: un objeto con los 3 campos de texto del formulario.
+  // Usamos un solo estado para los tres campos en vez de tres useState separados.
   const [form, setForm] = useState({ nombre: '', correo: '', telefono: '' });
+
+  // franja: 'Mañana' o 'Tarde' (el horario preferido), o '' si aún no ha elegido.
   const [franja, setFranja] = useState('');
+
+  // error: el mensaje de validación que se muestra si falta algún dato.
   const [error, setError] = useState('');
+
+  // enviado: true justo después de confirmar por WhatsApp, para mostrar
+  // un mensaje de "¡Listo!" en vez del texto de ayuda normal.
   const [enviado, setEnviado] = useState(false);
 
+  // --- CÁLCULOS DEL CALENDARIO ---
+  // Estas variables se recalculan solas cada vez que el componente se
+  // vuelve a dibujar (por ejemplo, cuando cambia "mesActual").
+
+  // getDay() devuelve en qué día de la semana cae el día 1 del mes
+  // (0 = domingo, 1 = lunes, ... 6 = sábado). Lo usamos para saber
+  // cuántas celdas vacías poner ANTES del día 1 en la grilla.
   const primerDiaSemana = mesActual.getDay();
+
+  // Truco para saber cuántos días tiene el mes: le pedimos a JavaScript
+  // el "día 0" del MES SIGUIENTE, que en la práctica significa "el
+  // último día del mes anterior" (es decir, del mes que nos interesa).
   const diasEnMes = new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 0).getDate();
 
-  // No se permite retroceder antes del mes actual
+  // puedeIrAtras: true si el mes que se está mostrando es posterior al
+  // mes de hoy. Sirve para no dejar retroceder el calendario a un mes
+  // que ya pasó (no tendría sentido agendar un día que ya ocurrió).
   const puedeIrAtras =
     mesActual.getFullYear() > hoy.getFullYear() ||
     (mesActual.getFullYear() === hoy.getFullYear() && mesActual.getMonth() > hoy.getMonth());
 
+  // Retrocede un mes en el calendario (solo si puedeIrAtras lo permite).
   const irMesAnterior = () => {
     if (!puedeIrAtras) return;
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1));
   };
 
+  // Avanza un mes en el calendario (sin límite hacia adelante).
   const irMesSiguiente = () => {
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 1));
   };
 
+  // Se ejecuta cuando la persona hace clic en un número del calendario.
   const seleccionarDia = (dia) => {
     const fecha = new Date(mesActual.getFullYear(), mesActual.getMonth(), dia);
-    if (fecha < hoy || fecha.getDay() === 0) return; // Domingos cerrado, no se agenda en el pasado
+    // No dejamos seleccionar días que ya pasaron, ni domingos (el gym cierra).
+    if (fecha < hoy || fecha.getDay() === 0) return;
     setDiaSeleccionado(fecha);
-    setError('');
-    setEnviado(false);
+    setError('');      // Si había un mensaje de error, lo limpiamos.
+    setEnviado(false); // Si ya se había mostrado el aviso de "enviado", lo ocultamos.
   };
 
+  // Maneja los cambios en los 3 inputs de texto (nombre, correo, teléfono).
+  // Como los tres inputs comparten esta misma función, usamos el
+  // atributo "name" de cada input (e.target.name) para saber cuál
+  // campo específico cambió.
   const handleChange = (e) => {
+    // "...form" copia los valores que ya había en el objeto, y
+    // "[e.target.name]: e.target.value" sobreescribe SOLO el campo
+    // que la persona está escribiendo en este momento.
     setForm({ ...form, [e.target.name]: e.target.value });
     setEnviado(false);
   };
 
+  // Se ejecuta al hacer clic en el botón "Mañana" o "Tarde".
   const elegirFranja = (valor) => {
     setFranja(valor);
     setEnviado(false);
   };
 
+  // Se ejecuta al hacer clic en "Confirmar por WhatsApp".
   const handleAgendar = () => {
+    // --- VALIDACIONES ---
+    // Revisamos los datos uno por uno; si algo falta o está mal,
+    // mostramos un mensaje de error específico y detenemos la función
+    // con "return" (así el código de abajo no se ejecuta).
+
     if (!form.nombre.trim() || !form.correo.trim() || !form.telefono.trim()) {
       setError('Por favor completa tu nombre, correo y teléfono.');
       return;
     }
+    // Esta es una expresión regular (regex): revisa que el correo tenga
+    // la forma básica "algo@algo.algo". No comprueba que el correo
+    // exista de verdad, solo que el formato sea válido.
     if (!/^\S+@\S+\.\S+$/.test(form.correo)) {
       setError('Ingresa un correo electrónico válido.');
       return;
@@ -77,14 +146,32 @@ export default function AgendaPrueba() {
       return;
     }
 
+    // Si llegamos hasta aquí, todos los datos son válidos.
+
+    // Convertimos la fecha elegida en un texto legible para humanos, ej:
+    // "Jueves 17 de Septiembre de 2026"
     const fechaTexto = `${DIAS_LARGOS[diaSeleccionado.getDay()]} ${diaSeleccionado.getDate()} de ${MESES[diaSeleccionado.getMonth()]} de ${diaSeleccionado.getFullYear()}`;
 
+    // Armamos el mensaje completo que se enviará por WhatsApp.
+    // "\n" dentro del texto crea un salto de línea.
     const mensaje = `¡Hola Strength Lab! Quiero agendar mi día de prueba gratis.\n\nNombre: ${form.nombre}\nCorreo: ${form.correo}\nTeléfono: ${form.telefono}\nDía preferido: ${fechaTexto}\nHorario preferido: ${franja}`;
 
+    // encodeURIComponent convierte el mensaje en un formato seguro para
+    // ponerlo dentro de una dirección web (reemplaza espacios, tildes,
+    // signos de exclamación, etc). wa.me/<numero>?text=<mensaje> es el
+    // formato oficial de "clic para chatear" de WhatsApp: abre un chat
+    // ya con el número y el mensaje listos.
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`;
+
+    // Abrimos WhatsApp en una pestaña nueva del navegador.
+    // 'noopener,noreferrer' es una medida de seguridad recomendada al
+    // abrir enlaces externos así (evita que esa nueva pestaña pueda
+    // manipular la pestaña original de nuestro sitio).
     window.open(url, '_blank', 'noopener,noreferrer');
 
-    // Reinicia el formulario para que quede listo para una nueva agenda
+    // Reiniciamos el formulario para que quede listo para una nueva
+    // agenda (por ejemplo, si otra persona va a usar la misma pantalla
+    // justo después, en una computadora del gimnasio).
     setForm({ nombre: '', correo: '', telefono: '' });
     setDiaSeleccionado(null);
     setFranja('');
@@ -113,7 +200,11 @@ export default function AgendaPrueba() {
 
         <div className="bg-sl-navy/10 border border-sl-navy/30 rounded-3xl p-6 sm:p-8 shadow-2xl">
 
-          {/* --- DATOS DE CONTACTO --- */}
+          {/* --- DATOS DE CONTACTO ---
+              Estos son "inputs controlados": su valor SIEMPRE viene del
+              estado "form" (value={form.nombre}) y cada tecla que la
+              persona escribe dispara onChange, que actualiza ese estado.
+              Así React siempre sabe exactamente qué hay escrito en cada campo. */}
           <h2 className="text-sl-gray uppercase text-xs tracking-[0.3em] font-bold mb-4">Tus datos</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             <input
@@ -143,6 +234,8 @@ export default function AgendaPrueba() {
           {/* --- CALENDARIO --- */}
           <h2 className="text-sl-gray uppercase text-xs tracking-[0.3em] font-bold mb-4">Elige tu día</h2>
           <div className="bg-sl-black/50 border border-sl-gray/20 rounded-2xl p-4 sm:p-6 mb-8">
+
+            {/* Encabezado del calendario: flecha atrás, nombre del mes, flecha adelante */}
             <div className="flex items-center justify-between mb-6">
               <button
                 type="button"
@@ -164,6 +257,7 @@ export default function AgendaPrueba() {
               </button>
             </div>
 
+            {/* Fila con las abreviaturas de los días de la semana (Dom, Lun, ...) */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
               {DIAS_CORTOS.map((d) => (
                 <div key={d} className="text-center text-[10px] sm:text-[11px] text-sl-gray uppercase tracking-widest font-bold">
@@ -172,14 +266,27 @@ export default function AgendaPrueba() {
               ))}
             </div>
 
+            {/* Grilla de números del mes (7 columnas = 7 días de la semana) */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2">
+              {/* Array.from({ length: N }) crea un arreglo "vacío" de N
+                  espacios, solo para poder usar .map() y generar N
+                  elementos repetidos. Aquí lo usamos para dibujar celdas
+                  en blanco ANTES del día 1, de modo que el día 1 caiga
+                  en la columna correcta de la semana (por ejemplo, si el
+                  mes empieza en miércoles, se ven 3 casillas vacías antes). */}
               {Array.from({ length: primerDiaSemana }).map((_, i) => (
                 <div key={`vacio-${i}`} />
               ))}
+
+              {/* Ahora sí generamos un botón por cada día real del mes (1, 2, 3...) */}
               {Array.from({ length: diasEnMes }).map((_, i) => {
                 const dia = i + 1;
                 const fecha = new Date(mesActual.getFullYear(), mesActual.getMonth(), dia);
+                // Un día está deshabilitado si ya pasó o si cae domingo.
                 const deshabilitado = fecha < hoy || fecha.getDay() === 0;
+                // Comparamos con getTime() (milisegundos desde 1970) porque
+                // comparar dos objetos Date directamente con "===" en
+                // JavaScript NO funciona como uno esperaría.
                 const seleccionado = diaSeleccionado && fecha.getTime() === diaSeleccionado.getTime();
 
                 return (
@@ -188,6 +295,10 @@ export default function AgendaPrueba() {
                     type="button"
                     disabled={deshabilitado}
                     onClick={() => seleccionarDia(dia)}
+                    // Esta cadena de texto con backticks (`) arma las
+                    // clases de Tailwind de forma dinámica: el color
+                    // cambia según si el día está deshabilitado,
+                    // seleccionado, o disponible normal.
                     className={`aspect-square rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all ${
                       deshabilitado
                         ? 'text-sl-gray/30 cursor-not-allowed'
@@ -230,6 +341,8 @@ export default function AgendaPrueba() {
             </button>
           </div>
 
+          {/* Mensaje de error: solo se dibuja en pantalla si "error"
+              tiene algún texto adentro (si es '' vacío, no se muestra nada). */}
           {error && (
             <p className="text-red-400 text-sm text-center mb-4">{error}</p>
           )}
@@ -243,6 +356,8 @@ export default function AgendaPrueba() {
             Confirmar por WhatsApp
           </button>
 
+          {/* Alternamos entre el texto de ayuda normal y el mensaje de
+              éxito, dependiendo del estado "enviado". */}
           {enviado ? (
             <p className="text-green-400 text-center mt-4 font-bold uppercase tracking-widest text-sm">
               ¡Listo! Confirma el envío en WhatsApp para agendar tu día.

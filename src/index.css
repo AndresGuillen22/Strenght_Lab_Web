@@ -1,16 +1,35 @@
-/* 1. Importamos Tailwind v4 directamente */
+/* ==========================================================
+   ESTILOS GLOBALES DEL SITIO
+   ==========================================================
+   Este archivo se importa una sola vez, en main.jsx, y sus reglas
+   aplican a TODA la página. Aquí vive la configuración de Tailwind
+   y los colores de marca de Strength Lab. */
+
+/* 1. Importamos Tailwind v4 directamente.
+      Esto activa TODAS las clases de utilidad que usamos en los
+      componentes (ej: "flex", "text-xl", "bg-sl-navy", etc). En vez
+      de escribir CSS a mano, en los archivos .jsx usamos estas
+      clases ya hechas para dar estilo. */
 @import "tailwindcss";
 
-/* 2. Definimos tus colores de Strength Lab como variables de tema */
+/* 2. Definimos los colores de Strength Lab como "variables de tema".
+      Al declararlos aquí dentro de @theme, Tailwind genera
+      automáticamente clases como bg-sl-navy, text-sl-white,
+      border-sl-gray, etc, que usamos en todos los componentes en
+      vez de escribir códigos de color (hex) a mano en cada lugar.
+      Si algún día quieres cambiar la paleta de colores del sitio,
+      este es el ÚNICO lugar donde hay que tocarlo. */
 @theme {
-  --color-sl-navy: #102940;
-  --color-sl-petrol: #1A3140;
-  --color-sl-white: #F2F2F2;
-  --color-sl-gray: #A6A6A6;
-  --color-sl-black: #0D0D0D;
+  --color-sl-navy: #102940;   /* Azul oscuro principal (botones, acentos) */
+  --color-sl-petrol: #1A3140; /* Azul petróleo, usado en el hover de botones */
+  --color-sl-white: #F2F2F2;  /* El "blanco" del sitio (no es blanco puro) */
+  --color-sl-gray: #A6A6A6;   /* Gris para textos secundarios */
+  --color-sl-black: #0D0D0D;  /* El "negro" de fondo de toda la página */
 }
 
-/* 3. Forzamos el fondo negro al cuerpo de la página */
+/* 3. Forzamos el fondo negro y el texto claro en el <body>, para que
+      la página nunca se vea blanca mientras carga o si algún
+      componente no define sus propios colores. */
 body {
   background-color: var(--color-sl-black);
   color: var(--color-sl-white);
