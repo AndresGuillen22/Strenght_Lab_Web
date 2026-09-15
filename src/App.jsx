@@ -39,7 +39,7 @@ import { useState, useEffect } from 'react'
 // Importación de Iconos desde la librería 'lucide-react'.
 // Cada uno de estos nombres es un componente de ícono listo para usar,
 // por ejemplo <Menu size={28} /> dibuja el ícono de menú hamburguesa.
-import { Dumbbell, Menu, X, Info, Map, CreditCard, Users, CalendarCheck } from 'lucide-react';
+import { Dumbbell, Menu, X, Info, Map, Users, CalendarCheck } from 'lucide-react';
 
 // Importación de componentes de Navegación de React Router:
 // BrowserRouter: el "motor" que le permite a la página tener varias
@@ -59,8 +59,78 @@ import fotoBoomRoom from './assets/boom-room.png';
 import fotoMancuernas from './assets/mancuernas.png';
 import fotoMuñeco from './assets/muñeco.png';
 
+// Fotos usadas en las tarjetas de la sección "Nuestros Planes"
+import fotoPlanElite from './assets/plan-elite.jpg';
+import fotoPlanProgreso from './assets/plan-progreso.jpg';
+import fotoPlanInicial from './assets/plan-inicial.jpg';
+import fotoPlanBasico from './assets/plan-basico.jpg';
+
 // ==========================================================
-// 2. COMPONENTE PRINCIPAL
+// 2. DATOS DE LOS PLANES
+// ==========================================================
+// Este arreglo (array) vive FUERA del componente App porque son datos
+// fijos que no cambian mientras la página está abierta (no necesitan
+// useState). Cada objeto representa una tarjeta de precio, y más abajo
+// usamos .map() para dibujar una tarjeta por cada plan automáticamente
+// (así, si en el futuro agregas o quitas un plan, solo tocas esta lista
+// y NO tienes que tocar el HTML/JSX de las tarjetas).
+const planes = [
+  {
+    nombre: 'Plan Élite',
+    foto: fotoPlanElite,
+    sesiones: '20 sesiones',
+    precio: '$200',
+    descripcion: 'El compromiso total con tu transformación. 20 sesiones de entrenamiento 100% personalizado: más tiempo junto a tu entrenador, ajustes constantes en tu rutina y el ritmo de avance más rápido de los tres planes.',
+    beneficios: [
+      'Mayor cantidad de sesiones y el mejor precio por sesión',
+      'Seguimiento y ajustes de rutina más frecuentes',
+      'Resultados más rápidos y sostenidos en el tiempo',
+    ],
+    destacado: false, // true = se muestra resaltado con la etiqueta "Más Popular"
+  },
+  {
+    nombre: 'Plan Progreso',
+    foto: fotoPlanProgreso,
+    sesiones: '15 sesiones',
+    precio: '$150',
+    descripcion: 'El equilibrio perfecto entre inversión y resultados: las sesiones suficientes para transformar tu cuerpo de verdad y construir un hábito de entrenamiento sólido.',
+    beneficios: [
+      'El mejor balance entre precio y cantidad de sesiones',
+      'Suficiente acompañamiento para lograr cambios visibles',
+      'La opción recomendada por nuestros entrenadores',
+    ],
+    destacado: true,
+  },
+  {
+    nombre: 'Plan Inicial',
+    foto: fotoPlanInicial,
+    sesiones: '10 sesiones',
+    precio: '$100',
+    descripcion: 'La puerta de entrada al entrenamiento personalizado. Ideal para probar el método Strength Lab con acompañamiento real, aprender la técnica correcta desde el primer día y empezar a notar cambios en tu cuerpo.',
+    beneficios: [
+      'La forma más accesible de empezar con entrenador personal',
+      'Aprendé la técnica correcta desde el día uno',
+      'Ideal para quienes prueban el método por primera vez',
+    ],
+    destacado: false,
+  },
+  {
+    nombre: 'Plan Básico',
+    foto: fotoPlanBasico,
+    sesiones: null, // null = este plan no tiene un número de sesiones que mostrar
+    precio: '$45',
+    descripcion: 'Para quienes prefieren entrenar por su cuenta con una base sólida. No incluye entrenador personal, pero sí rutinas diseñadas según tus objetivos y el apoyo básico de nuestro equipo dentro del gimnasio.',
+    beneficios: [
+      'No incluye entrenador personal',
+      'Incluye rutina diseñada según tus objetivos',
+      'Ayuda básica del equipo de entrenadores en el gimnasio',
+    ],
+    destacado: false,
+  },
+];
+
+// ==========================================================
+// 3. COMPONENTE PRINCIPAL
 // ==========================================================
 function App()
 {
@@ -157,11 +227,6 @@ function App()
               <Map size={20} className="text-sl-gray group-hover:text-sl-navy" /> INSTALACIONES
             </Link>
 
-            {/* Placeholder visual, igual que "INFORMACIÓN" (sin función todavía) */}
-            <button className="flex items-center gap-4 text-lg font-bold hover:text-sl-navy transition-all group uppercase italic">
-              <CreditCard size={20} className="text-sl-gray group-hover:text-sl-navy" /> PLANES
-            </button>
-
             {/* ============================================================
                 SECCIÓN COMUNIDAD (temporalmente oculta)
                 ============================================================
@@ -248,6 +313,96 @@ function App()
                   </Link>
                 </div>
               </div>
+
+              {/* SECCIÓN PLANES: Tarjetas de precios de entrenamiento personalizado */}
+              <section className="py-16 sm:py-24 w-full max-w-6xl mx-auto px-4 sm:px-6">
+                <div className="text-center mb-12 sm:mb-16">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase italic tracking-tighter">
+                    Nuestros <span className="text-sl-gray">Planes</span>
+                  </h2>
+                  <p className="text-sl-gray italic text-xs sm:text-sm mt-3 tracking-[0.3em] uppercase">Lock in your strongest era</p>
+                </div>
+
+                {/* "grid-cols-1 md:grid-cols-2 xl:grid-cols-4" = las tarjetas
+                    se acomodan en 1 columna en celular, 2 en tablet/pantallas
+                    medianas, y 4 en pantallas muy anchas. */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8">
+                  {/* Recorremos el arreglo "planes" (definido arriba, fuera
+                      del componente) y dibujamos una tarjeta por cada plan. */}
+                  {planes.map((plan) => (
+                    <div
+                      key={plan.nombre}
+                      // Si "plan.destacado" es true, usamos un estilo con
+                      // borde y fondo más resaltado (para el plan más popular).
+                      // "overflow-hidden" recorta la foto de arriba para que
+                      // sus esquinas sigan la misma curva que "rounded-3xl".
+                      className={`relative flex flex-col rounded-3xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
+                        plan.destacado
+                          ? 'bg-sl-navy/20 border-sl-navy shadow-xl shadow-sl-navy/20'
+                          : 'bg-sl-navy/5 border-sl-gray/10 hover:border-sl-navy/50'
+                      }`}
+                    >
+                      {/* Esta etiqueta "Más Popular" solo se dibuja si
+                          plan.destacado es true (renderizado condicional con &&). */}
+                      {plan.destacado && (
+                        <span className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-sl-navy text-sl-white text-[10px] font-black uppercase tracking-widest py-1 px-4 rounded-full whitespace-nowrap shadow-lg">
+                          Más Popular
+                        </span>
+                      )}
+
+                      {/* FOTO DEL PLAN: usamos plan.foto (la imagen que
+                          importamos arriba y guardamos en cada objeto del
+                          arreglo "planes"). El degradado oscuro de abajo
+                          ayuda a que el borde de la foto se funda con la
+                          tarjeta en vez de cortarse de golpe.
+                          Usamos "aspect-square" (caja cuadrada, que crece o
+                          encoge junto con el ancho de la tarjeta) en vez de
+                          una altura fija: como las fotos originales son
+                          verticales, una caja cuadrada recorta mucho menos
+                          que una caja baja y ancha, así se ve casi toda la
+                          foto (y por lo tanto las caras) sin importar cuántas
+                          columnas tenga la grilla en cada tamaño de pantalla. */}
+                      <div className="relative aspect-square overflow-hidden">
+                        <img
+                          src={plan.foto}
+                          alt={plan.nombre}
+                          // Las fotos son verticales (retrato) pero la caja
+                          // donde se muestran es más ancha que alta, así que
+                          // "object-cover" recorta bastante arriba y abajo.
+                          // "object-top" hace que ese recorte se quede pegado
+                          // a la parte de ARRIBA de la foto (donde están las
+                          // caras) y solo recorte de abajo hacia arriba.
+                          className="w-full h-full object-cover object-top"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-sl-black/80 via-transparent to-transparent" />
+                      </div>
+
+                      {/* Contenido de texto de la tarjeta, con su propio
+                          padding (antes este padding estaba en la tarjeta
+                          completa; ahora vive aquí para que la foto de
+                          arriba pueda ocupar todo el ancho sin márgenes). */}
+                      <div className="flex flex-col grow p-6 sm:p-8">
+                        <h3 className="text-xl font-black uppercase italic tracking-tight mb-1">{plan.nombre}</h3>
+                        <p className="text-sl-gray text-xs uppercase tracking-widest mb-4 h-4">{plan.sesiones}</p>
+                        <p className="text-4xl font-black text-sl-white mb-6">{plan.precio}</p>
+
+                        <p className="text-sm text-sl-gray leading-relaxed mb-6 grow">{plan.descripcion}</p>
+
+                        {/* Lista de beneficios: otro .map(), esta vez sobre el
+                            arreglo "beneficios" que vive DENTRO de cada plan. */}
+                        <ul className="space-y-2 text-sm text-sl-gray">
+                          {plan.beneficios.map((beneficio) => (
+                            <li key={beneficio} className="flex items-start gap-2">
+                              <span className="text-sl-navy mt-1">•</span>
+                              <span>{beneficio}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
               {/* SECCIÓN UBICACIÓN: Información de contacto y mapa */}
               <section className="py-16 sm:py-24 bg-sl-black/50 w-full flex flex-col items-center border-t border-sl-gray/10">
