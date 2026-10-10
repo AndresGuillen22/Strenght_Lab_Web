@@ -101,7 +101,7 @@ export default function Instalaciones() {
 
         {/* Footer sutil */}
         <div className="mt-24 text-center">
-          <p className="text-[10px] text-sl-gray uppercase tracking-[0.5em] opacity-30">Strength Lab • Calidad Certificada • UTEC 2026</p>
+          <p className="text-[10px] text-sl-gray uppercase tracking-[0.5em] opacity-30">Strength Lab • Calidad Certificada</p>
         </div>
       </div>
     </div>
