@@ -16,10 +16,33 @@ import { Link } from 'react-router-dom';
 // Importamos las fotos que vamos a mostrar en la galería.
 // Al importar una imagen así, Vite la convierte en una URL utilizable
 // directamente en el atributo src de un <img>.
-import fotoMancuernas from './assets/mancuernas.png';
-import fotoBarras from './assets/barras.png';
-import fotoBoomRoom from './assets/boom-room.png';
-import fotoMuñeco from './assets/muñeco.png';
+import fotoLogoPared from './assets/inst-logo-pared.webp';
+import fotoPressBanca from './assets/inst-press-banca.webp';
+import fotoEspejos from './assets/inst-espejos.webp';
+import fotoMaquinas from './assets/inst-maquinas.webp';
+import fotoBumBumRoom from './assets/inst-bum-bum-room.webp';
+import fotoLogoLuces from './assets/inst-logo-luces.webp';
+import fotoCampeones from './assets/inst-campeones.webp';
+
+// Lista de las fotos de la galería. En vez de repetir el mismo bloque
+// de HTML siete veces, guardamos los datos de cada foto aquí y más abajo
+// usamos .map() para dibujar una tarjeta por cada una. Si algún día
+// quieres agregar o quitar una foto, solo tocas esta lista.
+//   - foto:     la imagen importada arriba
+//   - alt:      texto que describe la foto (accesibilidad / buscadores)
+//   - posicion: qué parte de la foto se queda visible cuando la tarjeta
+//               la recorta (ej: "object-[50%_65%]" = centrada en horizontal
+//               y un poco más abajo del centro en vertical)
+//   - ancha:    true = la tarjeta ocupa las 2 columnas de la grilla
+const fotos = [
+  { foto: fotoLogoPared, alt: 'Logo luminoso de Strength Lab en la pared', posicion: 'object-center', ancha: false },
+  { foto: fotoPressBanca, alt: 'Atleta entrenando press en la máquina Smith', posicion: 'object-[50%_65%]', ancha: false },
+  { foto: fotoEspejos, alt: 'Zona de mancuernas con espejos y luces LED', posicion: 'object-center', ancha: false },
+  { foto: fotoMaquinas, alt: 'Máquinas de entrenamiento Cybex', posicion: 'object-center', ancha: false },
+  { foto: fotoBumBumRoom, alt: 'The Bum Bum Room con luces hexagonales', posicion: 'object-center', ancha: false },
+  { foto: fotoLogoLuces, alt: 'Logo de Strength Lab bajo las luces hexagonales', posicion: 'object-center', ancha: false },
+  { foto: fotoCampeones, alt: 'Pared con fotos de nuestros atletas en competencias', posicion: 'object-center', ancha: true },
+];
 
 // "export default function ..." es la forma de crear un Componente de
 // React: una función que devuelve JSX (el "HTML especial" que React entiende).
@@ -49,42 +72,30 @@ export default function Instalaciones() {
           </div>
         </header>
 
-        {/* GALERÍA DE INSTALACIONES (Grid 2x2)
+        {/* GALERÍA DE INSTALACIONES
             "grid-cols-1 md:grid-cols-2" = 1 columna en celular,
             2 columnas en pantallas medianas o más grandes. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
-          {/* Foto 1: Mancuernas */}
-          <div className="group relative overflow-hidden rounded-[2rem] border border-sl-gray/20 bg-sl-navy/10 shadow-2xl">
-            {/* La clase "group" en este div, combinada con "group-hover:"
-                en la imagen de adentro, permite que al pasar el mouse sobre
-                TODA la tarjeta, la imagen reaccione (haga zoom). */}
-            <img src={fotoMancuernas} className="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Mancuernas" />
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-sl-black via-sl-black/20 to-transparent">
-              {/* Espacio libre por si más adelante quieres poner un texto/leyenda sobre la foto */}
+          {/* .map() recorre la lista "fotos" y dibuja una tarjeta por cada
+              elemento. React pide una "key" única por tarjeta; usamos el
+              texto alt porque no se repite. */}
+          {fotos.map((item) => (
+            <div
+              key={item.alt}
+              // La clase "group" en este div, combinada con "group-hover:"
+              // en la imagen de adentro, permite que al pasar el mouse sobre
+              // TODA la tarjeta, la imagen reaccione (haga zoom).
+              // Si la foto es "ancha", ocupa las 2 columnas (md:col-span-2).
+              className={`group relative overflow-hidden rounded-[2rem] border border-sl-gray/20 bg-sl-navy/10 shadow-2xl ${item.ancha ? 'md:col-span-2' : ''}`}
+            >
+              <img
+                src={item.foto}
+                alt={item.alt}
+                className={`w-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100 ${item.posicion} ${item.ancha ? 'h-96 md:h-[32rem]' : 'h-96'}`}
+              />
             </div>
-          </div>
-
-          {/* Foto 2: Barras */}
-          <div className="group relative overflow-hidden rounded-[2rem] border border-sl-gray/20 bg-sl-navy/10 shadow-2xl">
-            <img src={fotoBarras} className="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Barras" />
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-sl-black via-sl-black/20 to-transparent">
-            </div>
-          </div>
-
-          {/* Foto 3: Boom Room */}
-          <div className="group relative overflow-hidden rounded-[2rem] border border-sl-gray/20 bg-sl-navy/10 shadow-2xl">
-            <img src={fotoBoomRoom} className="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Boom Room" />
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-sl-black via-sl-black/20 to-transparent">
-            </div>
-          </div>
-
-          {/* Foto 4: Muñeco (Anatomía) */}
-          <div className="group relative overflow-hidden rounded-[2rem] border border-sl-gray/20 bg-sl-navy/10 shadow-2xl">
-            <img src={fotoMuñeco} className="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Anatomía" />
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-sl-black via-sl-black/20 to-transparent">
-            </div>
-          </div>
+          ))}
 
         </div>
 
